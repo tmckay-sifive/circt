@@ -1,4 +1,4 @@
-// RUN: circt-opt --pass-pipeline='builtin.module(firrtl.circuit(firrtl.module(firrtl-lint)))' --verify-diagnostics --split-input-file %s | FileCheck %s
+// RUN: circt-opt --pass-pipeline='builtin.module(firrtl.circuit(firrtl-analysis-instanceinfo,firrtl.module(firrtl-lint)))' --verify-diagnostics --split-input-file %s | FileCheck %s
 
 firrtl.circuit "lint_tests" {
   // CHECK: firrtl.module @lint_tests
@@ -80,5 +80,23 @@ firrtl.layer @GroupFoo bind {}
       // expected-error @below {{op is guaranteed to fail simulation, as the predicate is a reset signal}}
       firrtl.int.verif.assert %0 : !firrtl.uint<1>
     }
+  }
+}
+
+// -----
+
+firrtl.circuit "XMRInDesign" {
+  hw.hierpath private @xmrPath [@XMRInDesign::@sym]
+  // expected-note @below {{op is instantiated in this module}}
+  firrtl.module @XMRInDesign() attributes {
+    annotations = [
+      {
+        class = "sifive.enterprise.firrtl.MarkDUTAnnotation"
+      }
+    ]
+  } {
+    %a = firrtl.wire sym @sym : !firrtl.uint<1>
+    // expected-error @below {{is in the design. (Did you forget to put it under a layer?)}}
+    %0 = firrtl.xmr.deref @xmrPath : !firrtl.uint<1>
   }
 }

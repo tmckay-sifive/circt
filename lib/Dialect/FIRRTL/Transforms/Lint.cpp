@@ -6,8 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "circt/Analysis/FIRRTLInstanceInfo.h"
 #include "circt/Dialect/FIRRTL/FIRRTLOps.h"
 #include "circt/Dialect/FIRRTL/Passes.h"
+#include "circt/Dialect/SV/SVOps.h"
 #include "mlir/Pass/Pass.h"
 #include "llvm/ADT/APSInt.h"
 
@@ -36,8 +38,8 @@ struct Config {
 class Linter {
 
 public:
-  Linter(FModuleOp fModule, const Config &config)
-      : fModule(fModule), config(config){};
+  Linter(FModuleOp fModule, InstanceInfo &instanceInfo, const Config &config)
+      : fModule(fModule), instanceInfo(instanceInfo), config(config){};
 
   /// Lint the specified module.
   LogicalResult lint() {
@@ -47,6 +49,10 @@ public:
         return WalkResult::skip();
       if (isa<AssertOp, VerifAssertIntrinsicOp>(op))
         if (config.lintStaticAsserts && checkAssert(op).failed())
+          failed = true;
+
+      if (auto xmrDerefOp = dyn_cast<XMRDerefOp>(op))
+        if (checkXmr(xmrDerefOp).failed())
           failed = true;
 
       return WalkResult::advance();
@@ -60,6 +66,7 @@ public:
 
 private:
   FModuleOp fModule;
+  InstanceInfo &instanceInfo;
   const Config &config;
 
   LogicalResult checkAssert(Operation *op) {
@@ -92,13 +99,54 @@ private:
 
     return success();
   }
+
+  LogicalResult checkXmr(XMRDerefOp op) {
+    // XMRs under layers are okay.
+    if (op->getParentOfType<LayerBlockOp>() ||
+        op->getParentOfType<sv::IfDefOp>())
+      return success();
+
+    // The XMR is not under a layer.  This module must never be instantiated in
+    // the design.  Intentionally do NOT use "effective" design as this could
+    // lead to false positives.
+    if (!instanceInfo.allInstancesInDesign(fModule))
+      return success();
+
+    // If the op has a single user, that user is a connect, and the connect is
+    // to an instance which is marked `lowerToBind`, then this is a pattern for
+    // inlining the XMR into the bound instance site.  This pattern is used by
+    // Grand Central, but not elsewhere.
+    if (op.getResult().hasOneUse()) {
+      auto *user = *op.getResult().getUsers().begin();
+      auto connect = dyn_cast<MatchingConnectOp>(user);
+      if (connect && connect.getSrc() == op.getResult())
+        if (auto *definingOp = connect.getDest().getDefiningOp())
+          if (auto instanceOp = dyn_cast<InstanceOp>(definingOp))
+            if (instanceOp->hasAttr("lowerToBind"))
+              return success();
+    }
+
+    auto diag =
+        op.emitOpError()
+        << "is in the design. (Did you forget to put it under a layer?)";
+    diag.attachNote(fModule.getLoc()) << "op is instantiated in this module";
+
+    return failure();
+  }
 };
 
 struct LintPass : public circt::firrtl::impl::LintBase<LintPass> {
   using LintBase::lintStaticAsserts;
 
   void runOnOperation() override {
-    if (failed(Linter(getOperation(), {lintStaticAsserts}).lint()))
+    auto instanceInfo = getCachedParentAnalysis<InstanceInfo>();
+    if (!instanceInfo) {
+      llvm::errs() << "Unable to run the LintPass as no cached "
+                      "InstanceInfoAnalysis is available";
+      return signalPassFailure();
+    }
+    if (failed(
+            Linter(getOperation(), *instanceInfo, {lintStaticAsserts}).lint()))
       return signalPassFailure();
 
     markAllAnalysesPreserved();
