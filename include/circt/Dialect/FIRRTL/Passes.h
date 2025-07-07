@@ -220,6 +220,8 @@ std::unique_ptr<mlir::Pass> createCheckLayers();
 
 std::unique_ptr<mlir::Pass> createCheckRecursiveInstantiation();
 
+std::unique_ptr<mlir::Pass> createAnalysisInstanceInfo();
+
 /// Generate the code for registering passes.
 #define GEN_PASS_REGISTRATION
 #include "circt/Dialect/FIRRTL/Passes.h.inc"

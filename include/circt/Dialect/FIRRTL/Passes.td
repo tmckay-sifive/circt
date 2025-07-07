@@ -978,4 +978,20 @@ def CheckLayers : Pass<"firrtl-check-layers", "firrtl::CircuitOp"> {
   let constructor = "circt::firrtl::createCheckLayers()";
 }
 
+//------------------------------------------------------------------------------
+// Analysis Caching Passes
+//------------------------------------------------------------------------------
+
+def AnalysisInstanceInfo : Pass<"firrtl-analysis-instanceinfo",
+    "firrtl::CircuitOp"> {
+  let summary = "Run the InstanceInfo pass, caching it for later use";
+  let description = [{
+    A utility pass that exists only to run the FIRRTLInstanceInfo analysis and
+    cache it in MLIR infrastructure.  This is intended to be used in conjunction
+    with `getCachedParentAnalysis` in passes which do _not_ run on a
+    `CircuitOp`.
+  }];
+  let constructor = "circt::firrtl::createAnalysisInstanceInfo()";
+}
+
 #endif // CIRCT_DIALECT_FIRRTL_PASSES_TD
