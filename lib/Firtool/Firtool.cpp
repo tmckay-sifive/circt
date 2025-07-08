@@ -296,7 +296,9 @@ LogicalResult firtool::populateLowFIRRTLToHW(mlir::PassManager &pm,
   // Check for static asserts.
   pm.nest<firrtl::CircuitOp>().addPass(firrtl::createAnalysisInstanceInfo());
   pm.nest<firrtl::CircuitOp>().nest<firrtl::FModuleOp>().addPass(
-      circt::firrtl::createLintingPass(opt.getLintStaticAsserts()));
+      circt::firrtl::createLintingPass(
+          /*lintStaticAsserts=*/opt.getLintStaticAsserts(),
+          /*lintXmrsInDesign=*/opt.getLintXmrsInDesign()));
 
   pm.addPass(createLowerFIRRTLToHWPass(opt.shouldEnableAnnotationWarning(),
                                        opt.getVerificationFlavor()));
@@ -782,8 +784,15 @@ struct FirtoolCmdOptions {
       "disable-wire-elimination", llvm::cl::desc("Disable wire elimination"),
       llvm::cl::init(false)};
 
+  //===----------------------------------------------------------------------===
+  // Lint options
+  //===----------------------------------------------------------------------===
+
   llvm::cl::opt<bool> lintStaticAsserts{
       "lint-static-asserts", llvm::cl::desc("Lint static assertions"),
+      llvm::cl::init(true)};
+  llvm::cl::opt<bool> lintXmrsInDesign{
+      "lint-xmrs-in-design", llvm::cl::desc("Lint XMRs in the design"),
       llvm::cl::init(true)};
 };
 } // namespace
@@ -878,4 +887,5 @@ circt::firtool::FirtoolOptions::FirtoolOptions()
   symbolicValueLowering = clOptions->symbolicValueLowering;
   disableWireElimination = clOptions->disableWireElimination;
   lintStaticAsserts = clOptions->lintStaticAsserts;
+  lintXmrsInDesign = clOptions->lintXmrsInDesign;
 }

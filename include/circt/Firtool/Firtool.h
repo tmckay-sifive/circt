@@ -145,6 +145,8 @@ public:
 
   bool getLintStaticAsserts() const { return lintStaticAsserts; }
 
+  bool getLintXmrsInDesign() const { return lintXmrsInDesign; }
+
   // Setters, used by the CAPI
   FirtoolOptions &setOutputFilename(StringRef name) {
     outputFilename = name;
@@ -399,6 +401,11 @@ public:
     return *this;
   }
 
+  FirtoolOptions &setLintXmrsInDesign(bool value) {
+    lintXmrsInDesign = value;
+    return *this;
+  }
+
 private:
   std::string outputFilename;
   bool disableAnnotationsUnknown;
@@ -450,6 +457,7 @@ private:
   bool selectDefaultInstanceChoice;
   verif::SymbolicValueLowering symbolicValueLowering;
   bool disableWireElimination;
+  bool lintXmrsInDesign;
   bool lintStaticAsserts;
 };
 
