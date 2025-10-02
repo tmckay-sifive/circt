@@ -1177,6 +1177,21 @@ FIRRTLModuleLowering::lowerExtModule(FExtModuleOp oldModule,
   if (handleForceNameAnnos(oldModule, annos, loweringState))
     return {};
 
+  ArrayAttr inlineFiles;
+  annos.removeAnnotations([&](Annotation anno) {
+    if (anno.isClass("circt.InlineFilesAnnotation")) {
+      if (auto files = anno.getMember<ArrayAttr>("files")) {
+        inlineFiles = files;
+      }
+      return true;
+    }
+    return false;
+  });
+
+  if (inlineFiles) {
+    newModule->setAttr("inline_files", inlineFiles);
+  }
+
   loweringState.processRemainingAnnotations(oldModule, annos);
   return newModule;
 }

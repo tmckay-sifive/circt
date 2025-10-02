@@ -822,9 +822,18 @@ StringAttr HWModuleGeneratedOp::getVerilogModuleNameAttr() {
 }
 
 void HWModuleExternOp::build(OpBuilder &builder, OperationState &result,
-                             StringAttr name, const ModulePortInfo &ports,
+                             StringAttr name, ArrayRef<PortInfo> ports,
                              StringRef verilogName, ArrayAttr parameters,
                              ArrayRef<NamedAttribute> attributes) {
+  build(builder, result, name, ModulePortInfo(ports), verilogName, parameters,
+        attributes);
+}
+
+void HWModuleExternOp::build(OpBuilder &builder, OperationState &result,
+                             StringAttr name, const ModulePortInfo &ports,
+                             StringRef verilogName, ArrayAttr parameters,
+                             ArrayRef<NamedAttribute> attributes,
+                             ArrayAttr inlineFiles) {
   buildModule<HWModuleExternOp>(builder, result, name, ports, parameters,
                                 attributes, {});
 
@@ -837,14 +846,9 @@ void HWModuleExternOp::build(OpBuilder &builder, OperationState &result,
 
   if (!verilogName.empty())
     result.addAttribute("verilogName", builder.getStringAttr(verilogName));
-}
 
-void HWModuleExternOp::build(OpBuilder &builder, OperationState &result,
-                             StringAttr name, ArrayRef<PortInfo> ports,
-                             StringRef verilogName, ArrayAttr parameters,
-                             ArrayRef<NamedAttribute> attributes) {
-  build(builder, result, name, ModulePortInfo(ports), verilogName, parameters,
-        attributes);
+  if (inlineFiles)
+    result.addAttribute("inline_files", inlineFiles);
 }
 
 void HWModuleExternOp::modifyPorts(
