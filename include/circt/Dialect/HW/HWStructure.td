@@ -248,7 +248,7 @@ def HWModuleExternOp : HWModuleOpBase<"module.extern"> {
     have proper parameterization in the hw.dialect.  We need a way to represent
     parameterized types instead of just concrete types.
 
-    The 'inline_files' attribute (when present) contains references to emit.file
+    The 'files' attribute (when present) contains references to emit.file
     ops that provide the implementation for this external module.
   }];
   let arguments = (ins SymbolNameAttr:$sym_name,
@@ -257,7 +257,7 @@ def HWModuleExternOp : HWModuleOpBase<"module.extern"> {
                        OptionalAttr<LocationArrayAttr>:$port_locs,
                        ParamDeclArrayAttr:$parameters,
                        OptionalAttr<StrAttr>:$verilogName,
-                       OptionalAttr<FlatSymbolRefArrayAttr>:$inline_files);
+                       OptionalAttr<FlatSymbolRefArrayAttr>:$files);
   let results = (outs);
   let regions = (region AnyRegion:$body);
 

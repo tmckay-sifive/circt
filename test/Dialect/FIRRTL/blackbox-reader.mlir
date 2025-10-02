@@ -109,18 +109,18 @@ firrtl.circuit "NoDUT" attributes {annotations = [
 //
 firrtl.circuit "InlineFilesTest" {
   // CHECK-LABEL: hw.module.extern @ExtWithInline()
-  // CHECK-SAME: inline_files = [@blackbox_inline1.v, @blackbox_inline2.sv]
+  // CHECK-SAME: files = [@blackbox_inline1.v, @blackbox_inline2.sv]
   firrtl.extmodule @ExtWithInline() attributes {annotations = [
     {class = "firrtl.transforms.BlackBoxInlineAnno", name = "inline1.v", text = "module ExtWithInline(); endmodule"},
     {class = "firrtl.transforms.BlackBoxInlineAnno", name = "inline2.sv", text = "// Another file"}
   ]}
 
   // CHECK-LABEL: hw.module.extern @ExtWithoutInline()
-  // CHECK-NOT: inline_files
+  // CHECK-NOT: files
   firrtl.extmodule @ExtWithoutInline()
 
   // CHECK-LABEL: hw.module.extern @ExtWithSingleInline()
-  // CHECK-SAME: inline_files = [@blackbox_single.v]
+  // CHECK-SAME: files = [@blackbox_single.v]
   firrtl.extmodule @ExtWithSingleInline() attributes {annotations = [
     {class = "firrtl.transforms.BlackBoxInlineAnno", name = "single.v", text = "// Single inline file"}
   ]}

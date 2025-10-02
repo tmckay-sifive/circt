@@ -3,24 +3,24 @@
 
 firrtl.circuit "InlineFilesTest" {
   // CHECK-LABEL: hw.module.extern @ExtWithMultipleInlines()
-  // CHECK-SAME: inline_files = [@blackbox_inline1.v, @blackbox_inline2.sv]
+  // CHECK-SAME: files = [@blackbox_inline1.v, @blackbox_inline2.sv]
   firrtl.extmodule @ExtWithMultipleInlines() attributes {annotations = [
     {class = "firrtl.transforms.BlackBoxInlineAnno", name = "inline1.v", text = "module ExtWithMultipleInlines(); endmodule"},
     {class = "firrtl.transforms.BlackBoxInlineAnno", name = "inline2.sv", text = "// Another inline file"}
   ]}
   
   // CHECK-LABEL: hw.module.extern @ExtWithSingleInline()
-  // CHECK-SAME: inline_files = [@blackbox_single.v]
+  // CHECK-SAME: files = [@blackbox_single.v]
   firrtl.extmodule @ExtWithSingleInline() attributes {annotations = [
     {class = "firrtl.transforms.BlackBoxInlineAnno", name = "single.v", text = "// Single inline file"}
   ]}
   
   // CHECK-LABEL: hw.module.extern @ExtWithPathOnly()
-  // CHECK-NOT: inline_files
+  // CHECK-NOT: files
   firrtl.extmodule @ExtWithPathOnly()
   
   // CHECK-LABEL: hw.module.extern @ExtWithMixedAnnotations()
-  // CHECK-SAME: inline_files = [@blackbox_mixed.v]
+  // CHECK-SAME: files = [@blackbox_mixed.v]
   firrtl.extmodule @ExtWithMixedAnnotations() attributes {annotations = [
     {class = "firrtl.transforms.BlackBoxInlineAnno", name = "mixed.v", text = "// Mixed annotations"},
     {class = "freechips.rocketchip.annotations.InternalVerifBlackBoxAnnotation"}

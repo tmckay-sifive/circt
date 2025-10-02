@@ -1886,16 +1886,16 @@ firrtl.circuit "Foo" {
 
 // -----
 
-// Test that circt.InlineFilesAnnotation is properly converted to inline_files attribute
+// Test that circt.InlineFilesAnnotation is properly converted to files attribute
 firrtl.circuit "InlineFilesConversion" {
   // CHECK-LABEL: hw.module.extern @ExtWithInlineFiles()
-  // CHECK-SAME: inline_files = [@file1, @file2]
+  // CHECK-SAME: files = [@file1, @file2]
   firrtl.extmodule @ExtWithInlineFiles() attributes {annotations = [
     {class = "circt.InlineFilesAnnotation", files = [@file1, @file2]}
   ]}
 
   // CHECK-LABEL: hw.module.extern @ExtWithoutInlineFiles()
-  // CHECK-NOT: inline_files
+  // CHECK-NOT: files
   firrtl.extmodule @ExtWithoutInlineFiles() attributes {annotations = [
     {class = "firrtl.transforms.BlackBox"}
   ]}
